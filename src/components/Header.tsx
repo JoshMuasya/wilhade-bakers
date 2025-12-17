@@ -5,7 +5,6 @@ import { Button } from './ui/button';
 import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import ThemeToggler from './Theme/ThemeToggler';
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -48,7 +47,6 @@ const Header = () => {
 
                     {/* CTA Button */}
                     <div className="hidden md:flex items-center gap-4">
-                        <ThemeToggler />
                         <Button asChild>
                             <Link href="#contact">Order Now</Link>
                         </Button>
@@ -78,7 +76,6 @@ const Header = () => {
                                     {link.label}
                                 </Link>
                             ))}
-                            <ThemeToggler />
                             <Button className="mt-2" asChild>
                                 <Link href="#contact" onClick={() => setIsMenuOpen(false)}>Order Now</Link>
                             </Button>

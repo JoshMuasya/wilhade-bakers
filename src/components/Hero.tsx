@@ -1,231 +1,224 @@
 "use client"
 
-import React, { useEffect, useRef } from "react"
-import { Button } from "./ui/button"
-import Link from "next/link"
-import Image from "next/image"
-import { motion } from "framer-motion"
-import gsap from "gsap"
+import { useState, useMemo } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-const Hero = () => {
-    const sprinkleRefs = useRef<HTMLDivElement[]>([])
-    const imageRef = useRef<HTMLDivElement | null>(null)
-    const auraRef = useRef<HTMLDivElement | null>(null)
+// --- Pricing Config ---
+const SIZE_PRICES: Record<string, number | null> = {
+    "0.5kg": 1500,
+    "1kg": 2800,
+    "2kg": 5000,
+    custom: null,
+}
 
-    // Floating Loop Animation
-    useEffect(() => {
-        gsap.to(imageRef.current, {
-            y: -20,
-            duration: 3,
-            repeat: -1,
-            yoyo: true,
-            ease: "power1.inOut",
+const FLAVOR_PRICES: Record<string, number> = {
+    vanilla: 0,
+    chocolate: 200,
+    "red-velvet": 300,
+    fruit: 250,
+}
+
+const OCCASION_PRICES: Record<string, number> = {
+    birthday: 0,
+    wedding: 1000,
+    custom: 500,
+}
+
+export default function BuildYourCakeHero() {
+    const [occasion, setOccasion] = useState<string>("birthday")
+    const [flavor, setFlavor] = useState<string>("vanilla")
+    const [size, setSize] = useState<string>("1kg")
+
+    const cakeImage = useMemo(() => {
+        if (occasion === "wedding") return "/cake-wedding.png"
+        if (occasion === "birthday") return "/cake-birthday.png"
+        return "/cake-custom.png"
+    }, [occasion])
+
+    const price = useMemo(() => {
+        const base = SIZE_PRICES[size]
+        if (base === null) return null
+        return base + FLAVOR_PRICES[flavor] + OCCASION_PRICES[occasion]
+    }, [occasion, flavor, size])
+
+    const handleCompleteOrder = () => {
+        const params = new URLSearchParams({
+            occasion,
+            flavor,
+            size,
+            price: price ? price.toString() : "from-5000",
         })
-    }, [])
 
-    // Mouse-follow parallax
-    useEffect(() => {
-        const handleMove = (e: MouseEvent) => {
-            if (!imageRef.current) return
-            const x = (e.clientX / window.innerWidth - 0.5) * 10
-            const y = (e.clientY / window.innerHeight - 0.5) * 10
+        const section = document.getElementById("order-form")
+        section?.scrollIntoView({ behavior: "smooth" })
 
-            gsap.to(imageRef.current, {
-                rotateX: -y,
-                rotateY: x,
-                transformPerspective: 800,
-                duration: 0.4,
-            })
-        }
-
-        window.addEventListener("mousemove", handleMove)
-        return () => window.removeEventListener("mousemove", handleMove)
-    }, [])
-
-    useEffect(() => {
-        // GSAP floating loop
-        sprinkleRefs.current.forEach((el) => {
-            gsap.to(el, {
-                y: -20,
-                duration: 2.5,
-                repeat: -1,
-                yoyo: true,
-                ease: "power1.inOut",
-            })
-        })
-    }, [])
+        // Optional: push params to URL
+        window.history.replaceState(null, "", `?${params.toString()}`)
+    }
 
     return (
-        <section
-            id="home"
-            className="min-h-screen w-full flex items-center relative overflow-hidden bg-linear-to-b from-pink-50 via-rose-50 to-white dark:from-neutral-900 dark:via-neutral-950 dark:to-black pt-20 md:pt-24 pb-10"
-        >
-            {/* Sprinkles */}
-            <div className="absolute inset-0 pointer-events-none opacity-40">
-                {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                        key={i}
-                        ref={(el) => {
-                            sprinkleRefs.current[i] = el!;
-                        }}
+        <section className="w-full relative min-h-screen overflow-hidden bg-linear-to-br from-pink-50 via-white to-amber-50 px-6 py-24">
+            {/* Light blobs */}
+            <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-pink-300/30 blur-3xl" />
+            <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 rounded-full bg-amber-300/30 blur-3xl" />
 
-                        className="absolute w-3 h-3 rounded-sm rotate-45 bg-accent animate-float-medium"
-                        style={{
-                            top: `${20 * i}%`,
-                            left: `${15 * i}%`,
-                        }}
-                    />
-                ))}
-            </div>
+            {/* Floating sparkles */}
+            <motion.div
+                className="pointer-events-none absolute left-1/4 top-1/3 h-2 w-2 rounded-full bg-pink-400"
+                animate={{ y: [0, -20, 0], opacity: [0.3, 0.8, 0.3] }}
+                transition={{ duration: 4, repeat: Infinity }}
+            />
+            <motion.div
+                className="pointer-events-none absolute left-1/3 top-2/3 h-1.5 w-1.5 rounded-full bg-amber-400"
+                animate={{ y: [0, -15, 0], opacity: [0.2, 0.7, 0.2] }}
+                transition={{ duration: 5, repeat: Infinity }}
+            />
+            {/* Floating decorative cake */}
+            <motion.img
+                key={cakeImage}
+                src="velvet.jpg"
+                alt="Decorative cake"
+                className="pointer-events-none absolute -right-20 top-1/2 hidden w-[380px] -translate-y-1/2 opacity-30 md:block"
+                animate={{ y: [0, -20, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            />
 
-            <div className="container mx-auto px-4 relative z-10">
-                <div className="grid lg:grid-cols-2 gap-12 items-center">
-                    {/* LEFT CONTENT */}
+            <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 gap-16 md:grid-cols-2">
+                {/* Left Content */}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="flex flex-col items-center justify-center text-center"
+                >
+                    {/* Hero Cake */}
                     <motion.div
-                        initial={{ opacity: 0, y: 40 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7 }}
-                        className="text-center lg:text-left"
+                        className="mb-10 rounded-3xl bg-linear-to-br from-pink-50 via-white to-amber-100 p-3 shadow-2xl"
+                        animate={{ y: [0, -14, 0] }}
+                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                     >
-                        <p className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-wider uppercase mb-4 text-accent">
-                            Wilhide Bakers
-                        </p>
-
-                        <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, delay: 0.1 }}
-                            className="text-foreground font-serif font-bold leading-[1.2] text-4xl md:text-5xl lg:text-6xl mb-6"
-                        >
-                            Baking <span className="text-accent">Joy</span> Into Every Slice
-                        </motion.h1>
-
-                        <p className="text-muted-foreground text-lg md:text-xl mb-8 max-w-xl mx-auto lg:mx-0">
-                            Step into a world of sweetness! From dreamy wedding cakes to fun birthday creations,
-                            we craft delicious moments sprinkled with love, flavor, and pure artistry.
-                        </p>
-
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                            <Button asChild className="bg-accent hover:bg-accent/70 shadow-lg shadow-accent/30">
-                                <Link href="#cakes">Discover Our Cakes</Link>
-                            </Button>
-
-                            <Button variant="outline" asChild className="border-accent text-accent hover:bg-accent/10">
-                                <Link href="#contact">Order Your Treat</Link>
-                            </Button>
-                        </div>
-
-                        {/* Stats Section with gradient dividers + floating crumbs */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5, duration: 0.6 }}
-                            className="relative mt-16 pt-14"
-                        >
-
-                            {/* 🌈 Gradient Divider */}
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[2px] 
-                  bg-gradient-to-r from-transparent via-accent/70 to-transparent" />
-
-                            {/* 🧁 Floating Sprinkles */}
-                            <div className="pointer-events-none">
-                                <motion.div
-                                    animate={{ y: [0, -10, 0], opacity: [0.8, 1, 0.8], rotate: [0, 15, -15, 0] }}
-                                    transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                                    className="absolute -top-4 left-8 w-2 h-2 bg-rose-400 rounded-full"
-                                />
-
-                                <motion.div
-                                    animate={{ y: [0, -12, 0], opacity: [0.7, 1, 0.7], rotate: [0, -10, 10, 0] }}
-                                    transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
-                                    className="absolute -top-6 right-10 w-3 h-3 bg-coral-400 rounded-full"
-                                />
-
-                                <motion.div
-                                    animate={{ y: [0, -8, 0], opacity: [0.8, 1, 0.8], rotate: [0, 20, -20, 0] }}
-                                    transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                                    className="absolute top-10 left-1/4 w-2 h-2 bg-amber-300 rounded-full"
-                                />
-
-                                <motion.div
-                                    animate={{ y: [0, -14, 0], opacity: [0.6, 1, 0.6], rotate: [0, -25, 25, 0] }}
-                                    transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
-                                    className="absolute top-16 right-1/3 w-2 h-2 bg-purple-400 rounded-full"
-                                />
-                            </div>
-
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 mt-8">
-                                {/* Item 1 */}
-                                <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
-                                    <p className="font-serif text-5xl font-bold text-primary leading-none">500+</p>
-                                    <p className="text-muted-foreground text-base mt-2 tracking-wide">
-                                        Sweet Smiles
-                                    </p>
-                                </div>
-
-                                {/* 🌈 Vertical Gradient Divider for Desktop */}
-                                <div className="hidden sm:block h-20 w-0.5 bg-linear-to-b from-transparent via-accent/50 to-transparent mx-auto" />
-
-                                {/* Item 2 */}
-                                <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
-                                    <p className="font-serif text-5xl font-bold text-primary leading-none">50+</p>
-                                    <p className="text-muted-foreground text-base mt-2 tracking-wide">
-                                        Signature Flavors
-                                    </p>
-                                </div>
-
-                                {/* 🌈 Divider */}
-                                <div className="hidden sm:block h-20 w-0.5 bg-linear-to-b from-transparent via-accent/50 to-transparent mx-auto" />
-
-                                {/* Item 3 */}
-                                <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
-                                    <p className="font-serif text-5xl font-bold text-primary leading-none">10+</p>
-                                    <p className="text-muted-foreground text-base mt-2 tracking-wide">
-                                        Years of Magic
-                                    </p>
-                                </div>
-                            </div>
-                        </motion.div>
-
-
-                    </motion.div>
-
-                    {/* RIGHT IMAGE */}
-                    <motion.div
-                        ref={imageRef}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.2, duration: 0.6 }}
-                        className="relative w-full"
-                    >
-                        {/* Animated Aura Background */}
-                        <motion.div
-                            ref={auraRef}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 1 }}
-                            className="absolute inset-0 blur-3xl rounded-[40px] opacity-60"
-                            style={{
-                                background:
-                                    "radial-gradient(circle at 50% 50%, rgba(255,182,193,0.6), rgba(255,160,180,0.3), transparent)",
-                            }}
-                        />
-
-                        {/* Cake Image */}
-                        <Image
+                        <img
                             src="/herocake.jpg"
-                            alt="Cake"
-                            width={800}
-                            height={600}
-                            className="relative w-full rounded-[35px] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.25)]"
+                            alt="Signature cake"
+                            className="h-56 w-56 rounded-2xl object-cover md:h-72 md:w-72"
                         />
                     </motion.div>
 
-                </div>
+                    <h1 className="text-4xl font-bold leading-tight tracking-tight text-gray-900 md:text-5xl">
+                        Your Cake.{" "}
+                        <span className="text-pink-600">Your Style.</span>
+                        <br />
+                        Baked Fresh.
+                    </h1>
+
+                    <p className="mt-6 max-w-xl text-lg text-gray-600">
+                        Start customizing your cake in seconds. No online payments — just tell us
+                        what you want and we’ll handle the rest.
+                    </p>
+
+                    <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm text-gray-700">
+                        <span>✔ Baked fresh on order</span>
+                        <span>✔ Custom designs available</span>
+                        <span>✔ WhatsApp ordering</span>
+                    </div>
+                </motion.div>
+
+                {/* Cake Builder Card */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                    <Card className="relative rounded-2xl shadow-2xl backdrop-blur-lg bg-white/60 overflow-hidden">
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-linear-to-br from-pink-200/30 via-purple-200/20 to-blue-200/30 pointer-events-none rounded-2xl" />
+
+                        <CardHeader className="relative">
+                            <CardTitle className="text-xl">Build Your Cake</CardTitle>
+                        </CardHeader>
+
+                        <CardContent className="relative space-y-6">
+                            {/* Occasion */}
+                            <div>
+                                <label className="mb-2 block text-sm font-medium">Occasion</label>
+                                <Select value={occasion} onValueChange={setOccasion}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="birthday">Birthday</SelectItem>
+                                        <SelectItem value="wedding">Wedding</SelectItem>
+                                        <SelectItem value="custom">Custom</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Flavor */}
+                            <div>
+                                <label className="mb-2 block text-sm font-medium">Flavor</label>
+                                <Select value={flavor} onValueChange={setFlavor}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="vanilla">Vanilla</SelectItem>
+                                        <SelectItem value="chocolate">Chocolate</SelectItem>
+                                        <SelectItem value="red-velvet">Red Velvet</SelectItem>
+                                        <SelectItem value="fruit">Fruit</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Size */}
+                            <div>
+                                <label className="mb-2 block text-sm font-medium">Size</label>
+                                <Select value={size} onValueChange={setSize}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="0.5kg">0.5 kg</SelectItem>
+                                        <SelectItem value="1kg">1 kg</SelectItem>
+                                        <SelectItem value="2kg">2 kg</SelectItem>
+                                        <SelectItem value="custom">Custom size</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Price */}
+                            <div className="relative overflow-hidden rounded-xl bg-gray-100/80 p-4 backdrop-blur-sm">
+                                <p className="text-sm text-gray-600">Estimated Price</p>
+                                <AnimatePresence mode="wait">
+                                    <motion.p
+                                        key={price ?? "custom"}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="mt-1 text-2xl font-bold text-gray-900"
+                                    >
+                                        {price ? `KES ${price.toLocaleString()}` : "From KES 5,000"}
+                                    </motion.p>
+                                </AnimatePresence>
+                                <p className="mt-1 text-xs text-gray-600">
+                                    Final price may vary based on design & decoration.
+                                </p>
+                            </div>
+
+                            <Button
+                                onClick={handleCompleteOrder}
+                                size="lg"
+                                className="w-full rounded-xl bg-pink-600 text-white hover:bg-pink-700"
+                            >
+                                Complete Order
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </motion.div>
             </div>
         </section>
     )
 }
-
-export default Hero
