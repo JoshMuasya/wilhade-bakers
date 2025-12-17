@@ -1,6 +1,5 @@
 import Hero from "@/components/Hero";
 import Menu from "@/components/Menu";
-import ThemeToggler from "@/components/Theme/ThemeToggler";
 import Image from "next/image";
 
 export default function Home() {
