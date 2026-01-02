@@ -50,6 +50,18 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* Added custom color tokens used across components */
+  --color-coral: var(--coral);
+  --color-coral-light: var(--coral-light);
+  --color-navy: var(--navy);
+  --color-navy-light: var(--navy-light);
+  --color-navy-dark: var(--navy-dark);
+  --color-cream: var(--cream);
+  --color-cream-dark: var(--cream-dark);
+  --color-rose: var(--rose);
+  --color-rose-light: var(--rose-light);
+  --color-gold: hsl(45 80% 55%); /* Added for footer gold text (not previously defined) */
 }
 
 /* ============================
@@ -211,4 +223,3 @@
 .animate-float-fast {
   animation: floatFast 3s ease-in-out infinite;
 }
-
